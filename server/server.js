@@ -1,19 +1,33 @@
+const fs = require('fs');
 const express = require('express');
+const { ApolloServer } = require('apollo-server-express');
+
+let aboutMessage = "Issue Tracker API v1.0";
+
+const resolvers = {
+  Query: {
+    about: () => aboutMessage,
+  },
+  Mutation: {
+    setAboutMessage,
+  },
+};
+
+function setAboutMessage(_, { message }) {
+  return aboutMessage = message;
+}
+
+const server = new ApolloServer({
+  typeDefs: fs.readFileSync('./server/schema.graphql', 'utf-8'),
+  resolvers,
+});
+
 const app = express();
 
-const fileServerMiddleware = express.static('public');
+app.use(express.static('public'));
 
-const typeDefs = `
-    type Query {
-        about String!
-    }
-    type Mutation {
-        setAboutMessage(message: String!): String
-    }
-`;
+server.applyMiddleware({ app, path: '/graphql' });
 
-app.use('/public', fileServerMiddleware);
-
-app.listen(3000, function(){
-    console.log('App started on port 3000');
+app.listen(2000, function () {
+  console.log('App started on port 2000');
 });

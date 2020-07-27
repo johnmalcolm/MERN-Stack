@@ -13,14 +13,14 @@
   "license": "ISC",
   "dependencies": {
     "apollo-server-express": "^2.16.0",
-    "express": "^4.17.1",
-    "graphql": "^0.13.2"
+    "express": "^4.16.4",
+    "graphql": "^15.3.0",
+    "nodemon": "^1.18.9"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",
     "@babel/core": "^7.10.5",
     "@babel/preset-env": "^7.10.4",
-    "@babel/preset-react": "^7.10.4",
-    "nodemon": "^1.19.4"
+    "@babel/preset-react": "^7.10.4"
   }
 }
