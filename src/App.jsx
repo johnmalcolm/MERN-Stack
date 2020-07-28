@@ -20,7 +20,7 @@ const initialssues = [
 ];
 
 function IssueTable(props){
-        const issueRows = props.issues.map(issue => <IssueRow issue={issue}/>)
+        const issueRows = props.issues.map(issue => <IssueRow issue={issue} key={issue.id} />)
 
         return(
             <table className="bordered-table">
