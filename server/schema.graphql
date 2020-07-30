@@ -11,7 +11,7 @@ type Issue{
 }
 
 "Toned down Issue, used as Inputs, without server generated values"
-input issueInputs{
+input IssueInputs{
   title: String
   "Optional, if it is not supplied it will be set to new"
   status: String
@@ -28,5 +28,5 @@ type Query {
 
 type Mutation {
   setAboutMessage(message: String!): String
-  issueAdd(issue: issueInputs!): Issue!
+  issueAdd(issue: IssueInputs!): Issue!
 }
