@@ -1,25 +1,10 @@
 const fs = require('fs');
 const express = require('express');
-const { ApolloServer } = require('apollo-server-express');
+const { ApolloServer, UserInputError } = require('apollo-server-express');
 const { GraphQLScalarType } = require('graphql');
 const { Kind } = require('graphql/language');
 
-const GraphQLDate = new GraphQLScalarType({
-  name: 'GraphQLDate',
-  description: 'A Date() type in GraphQL as a scalar', 
-  serialize(value) {
-    return value.toISOString();   
-  },
-  parseLiteral(ast) {
-    return (ast.kind == Kind.STRING) ? new Date(ast.value) : undefined;
-  },
-  parseValue(value) {
-    return new Date(value);
-  },
-});
-
-let aboutMessage = "Issue Tracker API v1.0";
-
+// In Server Memory DB (Temp)
 const issuesDB = [
   {
     id: 1,
@@ -41,18 +26,7 @@ const issuesDB = [
   },
 ];
 
-const resolvers = {
-  Query: {
-    about: () => aboutMessage,
-    issueList
-  },
-  Mutation: {
-    setAboutMessage,
-    issueAdd,
-  },
-  GraphQLDate
-};
-
+// GraphQL Resolver Functions
 function setAboutMessage(_, { message }) {
   return aboutMessage = message;
 }
@@ -65,21 +39,47 @@ function issueAdd(_, { issue }){
   return issue; 
 }
 
+function validateIssue(_, { issue }){
+  const errors = [];
+  if (issuesDB.title.length < 3){
+    errors.push('Field "title" must be at least 3 characters long.')
+  }
+  if (issue.status == 'Assigned' && !issue.owner){
+    errors.push('Field "owner" is required when status is "Assigned"')
+  }
+  if (errors.length > 0){
+    throw new UserInputError('Invalid input(s)', {errors});
+  }
+}
+
 function issueList(){
   return issuesDB;
 }
 
+
+// Map Resolver for Graph QL
+const resolvers = {
+  Query: {
+    about: () => aboutMessage,
+    issueList
+  },
+  Mutation: {
+    setAboutMessage,
+    issueAdd,
+  },
+  GraphQLDate
+};
+
+// Setup GraphQL Server Middleware
 const server = new ApolloServer({
   typeDefs: fs.readFileSync('./server/schema.graphql', 'utf-8'),
   resolvers,
 });
 
+// Setup Express Server
 const app = express();
-
 app.use(express.static('public'));
-
 server.applyMiddleware({ app, path: '/graphql' });
-
 app.listen(2000, function () {
   console.log('App started on port 2000');
 });
