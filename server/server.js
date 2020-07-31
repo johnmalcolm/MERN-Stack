@@ -10,13 +10,17 @@ const GraphQLDate = new GraphQLScalarType({
   name: 'GraphQLDate',
   description: 'A Date() type in GraphQL as a scalar', 
   serialize(value) {
-    return value.toISOString();   
+    return value;   
   },
   parseLiteral(ast) {
-    return (ast.kind == Kind.STRING) ? new Date(ast.value) : undefined;
+    if (ast.kind == Kind.STRING){
+      const value = new Date(ast.value);
+      return isNaN(value) ? undefined : value;
+    } 
   },
   parseValue(value) {
-    return new Date(value);
+    const dateValue = new Date(value);
+    return isNaN(dateValue) ? undefined : value;
   },
 });
 
@@ -49,16 +53,16 @@ function setAboutMessage(_, { message }) {
 }
 
 function issueAdd(_, { issue }){
+  issueValidate(issue);
   issue.created = new Date();
   issue.id = issuesDB.length +1;
-  if (issue.status == undefined) issue.status = 'New';
   issuesDB.push(issue);
   return issue; 
 }
 
-function validateIssue(_, { issue }){
+function issueValidate( issue ){
   const errors = [];
-  if (issuesDB.title.length < 3){
+  if (issue.title.length < 3){
     errors.push('Field "title" must be at least 3 characters long.')
   }
   if (issue.status == 'Assigned' && !issue.owner){
@@ -90,6 +94,10 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs: fs.readFileSync('./server/schema.graphql', 'utf-8'),
   resolvers,
+  formatError: error => {
+    console.log(error);
+    return error;
+  }
 });
 
 // Setup Express Server
