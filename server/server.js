@@ -5,6 +5,23 @@ const { GraphQLScalarType } = require('graphql');
 const { Kind } = require('graphql/language');
 
 // In Server Memory DB (Temp)
+
+const GraphQLDate = new GraphQLScalarType({
+  name: 'GraphQLDate',
+  description: 'A Date() type in GraphQL as a scalar', 
+  serialize(value) {
+    return value.toISOString();   
+  },
+  parseLiteral(ast) {
+    return (ast.kind == Kind.STRING) ? new Date(ast.value) : undefined;
+  },
+  parseValue(value) {
+    return new Date(value);
+  },
+});
+
+let aboutMessage = "Issue Tracker API v1.0";
+
 const issuesDB = [
   {
     id: 1,
@@ -55,7 +72,6 @@ function validateIssue(_, { issue }){
 function issueList(){
   return issuesDB;
 }
-
 
 // Map Resolver for Graph QL
 const resolvers = {
