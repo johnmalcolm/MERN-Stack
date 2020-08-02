@@ -3,6 +3,10 @@ const express = require('express');
 const { ApolloServer, UserInputError } = require('apollo-server-express');
 const { GraphQLScalarType } = require('graphql');
 const { Kind } = require('graphql/language');
+const { MongoClient } = require('mongodb');
+
+const client = new MongoClient(url);
+client.connect();
 
 // In Server Memory DB (Temp)
 
