@@ -5,6 +5,10 @@ const { GraphQLScalarType } = require('graphql');
 const { Kind } = require('graphql/language');
 const { MongoClient } = require('mongodb');
 
+require('dotenv').config();
+const password = process.env.MONGO_DB_PASS;
+
+const url = `mongodb+srv://john123:${password}@scientometrics-cluster.c3y2t.mongodb.net/development?retryWrites=true&w=majority`
 const client = new MongoClient(url);
 client.connect();
 
