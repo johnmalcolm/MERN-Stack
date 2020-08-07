@@ -85,8 +85,9 @@ function issueValidate( issue ){
   }
 }
 
-function issueList(){
-  return issuesDB;
+async function issueList(){
+  const issues = await db.collection('issues').find({}).toArray();
+  return issues;
 }
 
 // Map Resolver for Graph QL
