@@ -3,6 +3,18 @@ const express = require('express');
 const { ApolloServer, UserInputError } = require('apollo-server-express');
 const { GraphQLScalarType } = require('graphql');
 const { Kind } = require('graphql/language');
+const { MongoClient } = require('mongodb');
+
+require('dotenv').config();
+const password = process.env.MONGO_DB_PASS;
+const url = `mongodb+srv://john123:${password}@scientometrics-cluster.c3y2t.mongodb.net/development?retryWrites=true&w=majority`
+
+async function connectToDb(){
+  const client = new MongoClient(url, { useNewUrlParser: true });
+  await client.connect();
+  console.log('Connected to MongoDB at ', url);
+  db = client.db();
+}
 
 // In Server Memory DB (Temp)
 
@@ -104,6 +116,14 @@ const server = new ApolloServer({
 const app = express();
 app.use(express.static('public'));
 server.applyMiddleware({ app, path: '/graphql' });
-app.listen(2000, function () {
-  console.log('App started on port 2000');
-});
+
+(async function (){
+  try {
+    await connectToDb();
+    app.listen(2000, function () {
+      console.log('App started on port 2000');
+    });
+  } catch (err) {
+    console.log('ERROR', err);
+  }
+})()
