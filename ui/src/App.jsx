@@ -46,7 +46,7 @@ const dateRegex = new RegExp('^\\d\\d\\d\\d-\\d\\d-\\d\\d');
 
 async function graphQLFetch(query, variables = {}){
     try {
-        const response = await fetch('http://localhost:2000/graphql',{
+        const response = await fetch(window.ENV.UI_API_ENDPOINT,{
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({ query, variables })
