@@ -94,7 +94,7 @@ const resolvers = {
 
 // Setup GraphQL Server Middleware
 const server = new ApolloServer({
-  typeDefs: fs.readFileSync('./server/schema.graphql', 'utf-8'),
+  typeDefs: fs.readFileSync('schema.graphql', 'utf-8'),
   resolvers,
   formatError: error => {
     console.log(error);
@@ -104,14 +104,13 @@ const server = new ApolloServer({
 
 // Setup Express Server
 const app = express();
-app.use(express.static('public'));
 server.applyMiddleware({ app, path: '/graphql' });
 
 (async function (){
   try {
     await connectToDb();
     app.listen(2000, function () {
-      console.log('App started on port 2000');
+      console.log('API started on port 2000');
     });
   } catch (err) {
     console.log('ERROR', err);
