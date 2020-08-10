@@ -11,6 +11,7 @@ const port = process.env.API_SERVER_PORT;
 
 /* global db print */
 /* eslint no-restricted-globals: "off" */
+let db;
 
 async function connectToDb() {
   const client = new MongoClient(url, { useNewUrlParser: true });
@@ -28,10 +29,11 @@ const GraphQLDate = new GraphQLScalarType({
     return value;
   },
   parseLiteral(ast) {
-    if (ast.kind == Kind.STRING) {
+    if (ast.kind === Kind.STRING) {
       const value = new Date(ast.value);
       return isNaN(value) ? undefined : value;
     }
+    return undefined;
   },
   parseValue(value) {
     const dateValue = new Date(value);
@@ -40,6 +42,19 @@ const GraphQLDate = new GraphQLScalarType({
 });
 
 let aboutMessage = 'Issue Tracker API v1.0';
+
+function issueValidate(issue) {
+  const errors = [];
+  if (issue.title.length < 3) {
+    errors.push('Field "title" must be at least 3 characters long.');
+  }
+  if (issue.status === 'Assigned' && !issue.owner) {
+    errors.push('Field "owner" is required when status is "Assigned"');
+  }
+  if (errors.length > 0) {
+    throw new UserInputError('Invalid input(s)', { errors });
+  }
+}
 
 async function getNextSequence(name) {
   const result = await db.collection('counters').findOneAndUpdate(
@@ -52,29 +67,18 @@ async function getNextSequence(name) {
 
 // GraphQL Resolver Functions
 function setAboutMessage(_, { message }) {
-  return aboutMessage = message;
+  aboutMessage = message;
+  return aboutMessage;
 }
 
 async function issueAdd(_, { issue }) {
   issueValidate(issue);
-  issue.created = new Date();
-  issue.id = await getNextSequence('issues');
-  const result = await db.collection('issues').insertOne(issue);
+  const newIssue = Object.assign({}, issue);
+  newIssue.created = new Date();
+  newIssue.id = await getNextSequence('issues');
+  const result = await db.collection('issues').insertOne(newIssue);
   const savedIssue = await db.collection('issues').findOne({ _id: result.insertedId });
   return savedIssue;
-}
-
-function issueValidate(issue) {
-  const errors = [];
-  if (issue.title.length < 3) {
-    errors.push('Field "title" must be at least 3 characters long.');
-  }
-  if (issue.status == 'Assigned' && !issue.owner) {
-    errors.push('Field "owner" is required when status is "Assigned"');
-  }
-  if (errors.length > 0) {
-    throw new UserInputError('Invalid input(s)', { errors });
-  }
 }
 
 async function issueList() {
@@ -107,10 +111,10 @@ const server = new ApolloServer({
 
 // Setup Express Server
 const app = express();
-const enableCors = (process.env.ENABLE_CORS || 'true') == 'true';
+const enableCors = (process.env.ENABLE_CORS || 'true') === 'true';
 server.applyMiddleware({ app, path: '/graphql', cors: enableCors });
 
-(async function () {
+(async function start() {
   try {
     await connectToDb();
     app.listen(port, () => {
