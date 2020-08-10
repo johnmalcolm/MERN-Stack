@@ -6,10 +6,13 @@ const { Kind } = require('graphql/language');
 const { MongoClient } = require('mongodb');
 
 require('dotenv').config();
-const password = process.env.MONGO_DB_PASS;
-const url = `mongodb+srv://john123:${password}@scientometrics-cluster.c3y2t.mongodb.net/development?retryWrites=true&w=majority`
+const url = process.env.DB_URL;
+const port = process.env.API_SERVER_PORT;
 
-async function connectToDb(){
+/* global db print */
+/* eslint no-restricted-globals: "off" */
+
+async function connectToDb() {
   const client = new MongoClient(url, { useNewUrlParser: true });
   await client.connect();
   console.log('Connected to MongoDB at ', url);
@@ -20,15 +23,15 @@ async function connectToDb(){
 
 const GraphQLDate = new GraphQLScalarType({
   name: 'GraphQLDate',
-  description: 'A Date() type in GraphQL as a scalar', 
+  description: 'A Date() type in GraphQL as a scalar',
   serialize(value) {
-    return value;   
+    return value;
   },
   parseLiteral(ast) {
-    if (ast.kind == Kind.STRING){
+    if (ast.kind == Kind.STRING) {
       const value = new Date(ast.value);
       return isNaN(value) ? undefined : value;
-    } 
+    }
   },
   parseValue(value) {
     const dateValue = new Date(value);
@@ -36,13 +39,13 @@ const GraphQLDate = new GraphQLScalarType({
   },
 });
 
-let aboutMessage = "Issue Tracker API v1.0";
+let aboutMessage = 'Issue Tracker API v1.0';
 
-async function getNextSequence(name){
+async function getNextSequence(name) {
   const result = await db.collection('counters').findOneAndUpdate(
     { _id: name },
-    { $inc: { current: 1 }},
-    { returnOriginal: false}
+    { $inc: { current: 1 } },
+    { returnOriginal: false }
   );
   return result.value.current;
 }
@@ -52,29 +55,29 @@ function setAboutMessage(_, { message }) {
   return aboutMessage = message;
 }
 
-async function issueAdd(_, { issue }){
+async function issueAdd(_, { issue }) {
   issueValidate(issue);
   issue.created = new Date();
   issue.id = await getNextSequence('issues');
   const result = await db.collection('issues').insertOne(issue);
-  const savedIssue = await db.collection('issues').findOne({_id: result.insertedId});
+  const savedIssue = await db.collection('issues').findOne({ _id: result.insertedId });
   return savedIssue;
 }
 
-function issueValidate( issue ){
+function issueValidate(issue) {
   const errors = [];
-  if (issue.title.length < 3){
-    errors.push('Field "title" must be at least 3 characters long.')
+  if (issue.title.length < 3) {
+    errors.push('Field "title" must be at least 3 characters long.');
   }
-  if (issue.status == 'Assigned' && !issue.owner){
-    errors.push('Field "owner" is required when status is "Assigned"')
+  if (issue.status == 'Assigned' && !issue.owner) {
+    errors.push('Field "owner" is required when status is "Assigned"');
   }
-  if (errors.length > 0){
-    throw new UserInputError('Invalid input(s)', {errors});
+  if (errors.length > 0) {
+    throw new UserInputError('Invalid input(s)', { errors });
   }
 }
 
-async function issueList(){
+async function issueList() {
   const issues = await db.collection('issues').find({}).toArray();
   return issues;
 }
@@ -83,13 +86,13 @@ async function issueList(){
 const resolvers = {
   Query: {
     about: () => aboutMessage,
-    issueList
+    issueList,
   },
   Mutation: {
     setAboutMessage,
     issueAdd,
   },
-  GraphQLDate
+  GraphQLDate,
 };
 
 // Setup GraphQL Server Middleware
@@ -99,20 +102,21 @@ const server = new ApolloServer({
   formatError: error => {
     console.log(error);
     return error;
-  }
+  },
 });
 
 // Setup Express Server
 const app = express();
-server.applyMiddleware({ app, path: '/graphql' });
+const enableCors = (process.env.ENABLE_CORS || 'true') == 'true';
+server.applyMiddleware({ app, path: '/graphql', cors: enableCors });
 
-(async function (){
+(async function () {
   try {
     await connectToDb();
-    app.listen(2000, function () {
-      console.log('API started on port 2000');
+    app.listen(port, () => {
+      console.log(`API started on port ${port}`);
     });
   } catch (err) {
     console.log('ERROR', err);
   }
-})()
+}());
