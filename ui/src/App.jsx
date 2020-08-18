@@ -1,5 +1,5 @@
 /* eslint "react/react-in-jsx-scope": "off" */
-/* globals React ReactDOM */
+/* globals React ReactDOM PropTypes */
 /* eslint "react/jsx-no-undef": "off" */
 /* eslint "react/no-multi-comp": "off" */
 /* eslint "no-alert": "off" */
@@ -116,6 +116,10 @@ class IssueAdd extends React.Component {
       </form>
     );
   }
+}
+
+IssueAdd.PropTypes = {
+  createIssue: PropTypes.func.isRequired,
 }
 
 class IssueList extends React.Component {
