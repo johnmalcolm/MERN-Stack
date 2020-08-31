@@ -1,5 +1,6 @@
 /* eslint "react/jsx-no-undef": "off" */
 import React from 'react';
+import URLSearchParams from 'url-search-params';
 
 import IssueFilter from './IssueFilter.jsx';
 import IssueTable from './IssueTable.jsx';
@@ -17,6 +18,15 @@ export default class IssueList extends React.Component {
     componentDidMount() {
       this.loadData();
     }
+
+    componentDidUpdate(prevProps) {
+      const { location: { search: prevSearch } } = prevProps;
+      const { location: { search } } = this.props;
+      if ( prevSearch !== search){
+        this.loadData();
+      }
+    }
+  
   
     async createIssue(issue) {
       const query = `mutation issueAdd($issue: IssueInputs!){
@@ -32,11 +42,17 @@ export default class IssueList extends React.Component {
     }
   
     async loadData() {
-      const query = `query { issueList {
-              id title status owner
-              created effort due
-            }}`;
-      const data = await graphQLFetch(query);
+      const { location: { search } } = this.props;
+      const params = new URLSearchParams(search);
+      const vars = {};
+      if (params.get('status')) vars.status = params.get('status');
+      
+      const query = `query issueList($status: StatusType) {
+              issueList(status: $status){
+                id title status owner
+                created effort due
+              }}`;
+      const data = await graphQLFetch(query, vars);
       if (data) {
         this.setState({ issues: data.issueList });
       }

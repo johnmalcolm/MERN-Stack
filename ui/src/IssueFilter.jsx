@@ -4,7 +4,13 @@ import React from 'react';
 export default class IssueFilter extends React.Component {
     render() {
       return (
-        <p>This is a placeholder for an issue filter</p>
+        <div>
+            <a href="/#/issues">All Issues</a>
+            {' | '}
+            <a href="/#/issues?status=New">New Issues</a>
+            {' | '}
+            <a href="/#/issues?status=Assigned">Assigned Issues</a>
+        </div>
       );
     }
   }
