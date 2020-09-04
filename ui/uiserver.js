@@ -1,5 +1,5 @@
 const express = require('express');
-
+const path = require('path');
 const app = express();
 const proxy = require('http-proxy-middleware');
 require('dotenv').config();
@@ -38,6 +38,10 @@ app.use(express.static('public'));
 
 app.get('/env.js', (req, res) => {
   res.send(`window.ENV = ${JSON.stringify(env)}`);
+});
+
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve('public/index.html'));
 });
 
 app.listen(port, () => {

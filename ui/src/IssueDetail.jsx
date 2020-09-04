@@ -42,7 +42,7 @@ export default class IssueDetail extends React.Component {
 
     return(
         <div>
-            <h3>Description</h3>
+            <h3>Test</h3>
             <p>{description}</p>
         </div>
     )
